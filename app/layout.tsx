@@ -46,6 +46,7 @@ export default function RootLayout({
     <html
       lang="en"
       className={cn("h-full", "antialiased", geistSans.variable, geistMono.variable, libreBaskerville.variable, inter.variable, figtree.variable)}
+      suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col">
         <Providers>
