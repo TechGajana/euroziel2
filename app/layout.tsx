@@ -4,7 +4,11 @@ import "./globals.css";
 import { Providers } from "@/providers/providers";
 import { cn } from "@/lib/utils";
 
-const figtree = Figtree({subsets:['latin'],variable:'--font-sans'});
+// Configure Figtree (Sans-Serif for Body text)
+const figtree = Figtree({
+  subsets: ['latin'],
+  variable: '--font-figtree',
+});
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -16,10 +20,11 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+// Configure Libre Baskerville (Serif for Headings)
 const libreBaskerville = Libre_Baskerville({
-  variable: "--font-libre-baskerville",
-  weight: ["400", "700"],
-  subsets: ["latin"],
+  subsets: ['latin'],
+  weight: ['400', '700'],
+  variable: '--font-baskerville',
 });
 
 const inter = Inter({
@@ -40,7 +45,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={cn("h-full", "antialiased", geistSans.variable, geistMono.variable, libreBaskerville.variable, inter.variable, "font-sans", figtree.variable)}
+      className={cn("h-full", "antialiased", geistSans.variable, geistMono.variable, libreBaskerville.variable, inter.variable, figtree.variable)}
     >
       <body className="min-h-full flex flex-col">
         <Providers>
