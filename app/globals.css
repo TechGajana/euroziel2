@@ -73,6 +73,11 @@
   --muted-foreground: #64748b;
   --accent: #e2e8f0;
   --accent-foreground: #4a90d9;
+
+  /* existing variables... */
+  --accent-gold: #ffd97d;
+  --accent-gold-hover: #f5c842;        /* slightly deeper for hover */
+  --accent-gold-foreground: #1a3c5a;   /* dark navy text on gold — readable */
   
   --destructive: oklch(0.577 0.245 27.325);
   --border: #e2e8f0;
@@ -89,6 +94,9 @@
   --sidebar-accent-foreground: #4a90d9;
   --sidebar-border: #e2e8f0;
   --sidebar-ring: #4a90d9;
+
+  --navbar-bg-rgb: 255, 255, 255;  /* White for light mode */
+  --shadow-color-rgb: 15, 23, 42;   /* Slate 900 for shadows */
 }
 
 [data-theme='dark'] {
@@ -111,6 +119,10 @@
   --muted-foreground: #94a3b8;
   --accent: #334155;
   --accent-foreground: #f8fafc;
+
+  --accent-gold: #ffd97d;              /* gold stays consistent in dark mode */
+  --accent-gold-hover: #f5c842;
+  --accent-gold-foreground: #0f172a;   /* your dark --background as text */
   
   --destructive: oklch(0.704 0.191 22.216);
   --border: #334155;
@@ -126,6 +138,9 @@
   --sidebar-accent-foreground: #f8fafc;
   --sidebar-border: #1e293b;
   --sidebar-ring: #4a90d9;
+
+  --navbar-bg-rgb: 15, 23, 42;      /* Dark slate for dark mode */
+  --shadow-color-rgb: 0, 0, 0;      /* Black for shadows */
 }
 
 @layer base {
