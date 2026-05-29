@@ -21,15 +21,15 @@ function loadScript(src: string): Promise<void> {
   });
 }
 
-const THREE_CDN  = 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js';
+const THREE_CDN = 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js';
 const CLOUDS_CDN = 'https://cdn.jsdelivr.net/npm/vanta@latest/dist/vanta.clouds.min.js';
-const BIRDS_CDN  = 'https://cdn.jsdelivr.net/npm/vanta@latest/dist/vanta.birds.min.js';
+const BIRDS_CDN = 'https://cdn.jsdelivr.net/npm/vanta@latest/dist/vanta.birds.min.js';
 
 export default function Hero() {
-  const cloudsRef  = useRef<HTMLDivElement>(null);
-  const birdsRef   = useRef<HTMLDivElement>(null);
+  const cloudsRef = useRef<HTMLDivElement>(null);
+  const birdsRef = useRef<HTMLDivElement>(null);
   const cloudsEffect = useRef<VantaEffect | null>(null);
-  const birdsEffect  = useRef<VantaEffect | null>(null);
+  const birdsEffect = useRef<VantaEffect | null>(null);
 
   const { resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
@@ -43,7 +43,7 @@ export default function Hero() {
     cloudsEffect.current?.destroy();
     birdsEffect.current?.destroy();
     cloudsEffect.current = null;
-    birdsEffect.current  = null;
+    birdsEffect.current = null;
 
     // Load THREE once, then both Vanta scripts in parallel
     loadScript(THREE_CDN).then(() =>
@@ -65,12 +65,12 @@ export default function Hero() {
         minHeight: 50,
         minWidth: 50,
         scale: 1.0,
-        skyColor:         isDark ? 0x0d1b2a : 0x4a90d9,
-        cloudColor:       isDark ? 0x1a2f4a : 0xffffff,
+        skyColor: isDark ? 0x0d1b2a : 0x4a90d9,
+        cloudColor: isDark ? 0x1a2f4a : 0xffffff,
         cloudShadowColor: isDark ? 0x060e18 : 0x0f172a,
-        sunColor:         isDark ? 0x223344 : 0xff9f00,
-        sunGlareColor:    isDark ? 0x1a2a3a : 0xffd97d,
-        sunlightColor:    isDark ? 0x1a2a3a : 0xffeebb,
+        sunColor: isDark ? 0x223344 : 0xff9f00,
+        sunGlareColor: isDark ? 0x1a2a3a : 0xffd97d,
+        sunlightColor: isDark ? 0x1a2a3a : 0xffeebb,
         speed: 0.3,
         quantity: 2,
         texturePath: 'https://www.vantajs.com/gallery/noise.png',
@@ -105,7 +105,7 @@ export default function Hero() {
       cloudsEffect.current?.destroy();
       birdsEffect.current?.destroy();
       cloudsEffect.current = null;
-      birdsEffect.current  = null;
+      birdsEffect.current = null;
     };
   }, [mounted, isDark]);
 
@@ -164,6 +164,14 @@ export default function Hero() {
     transition: mounted ? 'all 0.4s ease' : 'none',
   };
 
+  const overlayStyle: CSSProperties = {
+    background: (!mounted || isDark)
+      ? 'rgba(15,23,42,0.4)'
+      : 'rgba(19, 90, 77, 0.3)',
+    backdropFilter: 'blur(4px)',
+    transition: mounted ? 'background 0.5s ease' : 'none',
+  };
+
   const scrollColor = (!mounted || isDark) ? 'rgba(255,255,255,0.6)' : 'rgba(15,23,42,0.5)';
 
   const handlePrimaryEnter = (e: MouseEvent<HTMLAnchorElement>) => {
@@ -216,6 +224,9 @@ export default function Hero() {
           aria-hidden="true"
           style={{ width: '100%', height: '100%', objectFit: 'fill', objectPosition: 'bottom' }}
         />
+
+        {/* Overlay: Darker in night and lighter in day */}
+        <div className="absolute inset-0 z-10 pointer-events-none" style={overlayStyle} />
       </div>
 
       <div className="relative z-30 text-center px-6 pb-20 max-w-4xl mx-auto">

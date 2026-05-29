@@ -53,7 +53,7 @@ export default function FloatingNavbar() {
         }}
       >
         {/* Logo */}
-        <Link
+        {/* <Link
           href="/"
           className="flex items-center gap-2 px-3 py-1.5 mr-2 font-bold text-base rounded-full"
           style={{ color: 'var(--primary)', fontFamily: 'var(--font-serif)' }}
@@ -67,7 +67,7 @@ export default function FloatingNavbar() {
           EuroZiel
         </Link>
 
-        <span className="w-px h-5 mr-2" style={{ background: 'var(--border)' }} aria-hidden="true" />
+        <span className="w-px h-5 mr-2" style={{ background: 'var(--border)' }} aria-hidden="true" /> */}
 
         {/* Nav links */}
         {navLinks.map(({ href, label }) => {

@@ -5,6 +5,8 @@ import "./globals.css";
 import { Providers } from "@/providers/providers";
 import FloatingThemeToggle from '@/components/FloatingThemeToggle';
 import { cn } from "@/lib/utils";
+import FloatingLogo from "@/components/FloatingLogo";
+import FloatingNavbar from "@/components/FloatingNavbar";
 
 // ── Only load fonts actually used in globals.css ──────────────
 const figtree = Figtree({
@@ -47,8 +49,10 @@ export default function RootLayout({
       </head>
       <body className="min-h-full flex flex-col">
         <Providers>
-          {children}
+          <FloatingLogo />
+          <FloatingNavbar />
           <FloatingThemeToggle />
+          {children}
         </Providers>
       </body>
     </html>
