@@ -1,10 +1,7 @@
-// types/vanta.d.ts
 declare module 'vanta/dist/vanta.clouds.min' {
-  import * as THREE from 'three';
-
   interface CloudsOptions {
     el: HTMLElement | null;
-    THREE: typeof THREE;
+    THREE: object;
     mouseControls?: boolean;
     touchControls?: boolean;
     gyroControls?: boolean;
@@ -21,10 +18,37 @@ declare module 'vanta/dist/vanta.clouds.min' {
     quantity?: number;
     texturePath?: string;
   }
-
   interface VantaEffect {
     destroy: () => void;
   }
-
   export default function CLOUDS(options: CloudsOptions): VantaEffect;
+}
+
+declare module 'vanta/dist/vanta.birds.min' {
+  interface BirdsOptions {
+    el: HTMLElement | null;
+    mouseControls?: boolean;
+    touchControls?: boolean;
+    gyroControls?: boolean;
+    minHeight?: number;
+    minWidth?: number;
+    scale?: number;
+    scaleMobile?: number;
+    backgroundColor?: number;
+    backgroundAlpha?: number;
+    color1?: number;
+    color2?: number;
+    colorMode?: 'variance' | 'gradient' | 'solid';
+    quantity?: number;
+    birdSize?: number;
+    wingSpan?: number;
+    speedLimit?: number;
+    cohesion?: number;
+    separation?: number;
+    alignment?: number;
+  }
+  interface VantaEffect {
+    destroy: () => void;
+  }
+  export default function BIRDS(options: BirdsOptions): VantaEffect;
 }

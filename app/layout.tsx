@@ -39,25 +39,11 @@ export default function RootLayout({
       suppressHydrationWarning  // needed because data-theme is set client-side
     >
       <head>
-        {/*
-          Inline script — runs before first paint, no flash.
-          Reads localStorage, falls back to system preference,
-          sets data-theme on <html> immediately.
-        */}
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              (function() {
-                try {
-                  var saved = localStorage.getItem('theme');
-                  var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-                  var dark = saved ? saved === 'dark' : prefersDark;
-                  document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
-                } catch(e) {}
-              })();
-            `,
-          }}
-        />
+        <style>{`
+          html {
+            color-scheme: light dark;
+          }
+        `}</style>
       </head>
       <body className="min-h-full flex flex-col">
         <Providers>

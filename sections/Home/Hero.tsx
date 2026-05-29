@@ -1,150 +1,224 @@
 'use client';
 
-import { useEffect, useRef, CSSProperties, MouseEvent } from 'react';
-import * as THREE from 'three';
-import VANTA from 'vanta/dist/vanta.clouds.min';
+import { useEffect, useRef, useState, CSSProperties, MouseEvent } from 'react';
+import { useTheme } from 'next-themes';
 
 interface VantaEffect {
   destroy: () => void;
 }
 
+function loadScript(src: string): Promise<void> {
+  return new Promise((resolve, reject) => {
+    if (document.querySelector(`script[src="${src}"]`)) {
+      resolve();
+      return;
+    }
+    const script = document.createElement('script');
+    script.src = src;
+    script.onload = () => resolve();
+    script.onerror = () => reject(new Error(`Failed to load ${src}`));
+    document.head.appendChild(script);
+  });
+}
+
+const THREE_CDN  = 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js';
+const CLOUDS_CDN = 'https://cdn.jsdelivr.net/npm/vanta@latest/dist/vanta.clouds.min.js';
+const BIRDS_CDN  = 'https://cdn.jsdelivr.net/npm/vanta@latest/dist/vanta.birds.min.js';
+
 export default function Hero() {
-  const vantaRef = useRef<HTMLElement>(null);
-  const vantaEffect = useRef<VantaEffect | null>(null);
+  const cloudsRef  = useRef<HTMLDivElement>(null);
+  const birdsRef   = useRef<HTMLDivElement>(null);
+  const cloudsEffect = useRef<VantaEffect | null>(null);
+  const birdsEffect  = useRef<VantaEffect | null>(null);
+
+  const { resolvedTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  const isDark = mounted ? resolvedTheme === 'dark' : false;
 
   useEffect(() => {
-    if (!vantaRef.current || vantaEffect.current) return;
+    if (!mounted || !cloudsRef.current || !birdsRef.current) return;
 
-    vantaEffect.current = VANTA({
-      el: vantaRef.current,
-      THREE,
-      mouseControls: true,
-      touchControls: true,
-      gyroControls: true,
-      minHeight: 200,
-      minWidth: 200,
-      scale: 1.0,
+    // Destroy both before reinitialising
+    cloudsEffect.current?.destroy();
+    birdsEffect.current?.destroy();
+    cloudsEffect.current = null;
+    birdsEffect.current  = null;
 
-      // Aligned to your brand: --primary: #4a90d9, --background dark: #0f172a
-      skyColor: 0x4a90d9,        // matches your --primary exactly
-      cloudColor: 0xffffff,      // white clouds
-      cloudShadowColor: 0x0f172a, // matches your dark --background
-      sunColor: 0xff9f00,
-      sunGlareColor: 0xffd97d,
-      sunlightColor: 0xffeebb,
+    // Load THREE once, then both Vanta scripts in parallel
+    loadScript(THREE_CDN).then(() =>
+      Promise.all([
+        loadScript(CLOUDS_CDN),
+        loadScript(BIRDS_CDN),
+      ])
+    ).then(() => {
+      const VANTA = (window as any).VANTA;
+      if (!VANTA?.CLOUDS || !VANTA?.BIRDS) return;
+      if (!cloudsRef.current || !birdsRef.current) return;
 
-      speed: 0.8,
-      quantity: 3,
-      texturePath: 'https://www.vantajs.com/gallery/noise.png',
-    });
+      // ── Layer 1: Clouds (background) ──────────────────────────────────
+      cloudsEffect.current = VANTA.CLOUDS({
+        el: cloudsRef.current,
+        mouseControls: true,
+        touchControls: true,
+        gyroControls: false,
+        minHeight: 50,
+        minWidth: 50,
+        scale: 1.0,
+        skyColor:         isDark ? 0x0d1b2a : 0x4a90d9,
+        cloudColor:       isDark ? 0x1a2f4a : 0xffffff,
+        cloudShadowColor: isDark ? 0x060e18 : 0x0f172a,
+        sunColor:         isDark ? 0x223344 : 0xff9f00,
+        sunGlareColor:    isDark ? 0x1a2a3a : 0xffd97d,
+        sunlightColor:    isDark ? 0x1a2a3a : 0xffeebb,
+        speed: 0.3,
+        quantity: 2,
+        texturePath: 'https://www.vantajs.com/gallery/noise.png',
+      });
+
+      // ── Layer 2: Birds (overlay — black bg → transparent via CSS) ─────
+      birdsEffect.current = VANTA.BIRDS({
+        el: birdsRef.current,
+        mouseControls: false,   // clouds already handles mouse
+        touchControls: false,
+        gyroControls: false,
+        minHeight: 50,
+        minWidth: 50,
+        scale: 1.0,
+        scaleMobile: 1.0,
+        backgroundColor: 0x000000, // pure black → becomes transparent via mix-blend-mode: screen
+        backgroundAlpha: 0.0,    // fully transparent background (in case some browsers don't support mix-blend-mode)
+        color1: isDark ? 0x4a90d9 : 0x2d6a4f,  // brand blue birds
+        color2: isDark ? 0xffd97d : 0x8ecae6,   // gold accent birds
+        colorMode: 'varianceGradient',
+        speedLimit: 3.0,
+        quantity: 2.0,           // fewer birds so they don't crowd the clouds
+        birdSize: 1.0,
+        wingSpan: 10.0,
+        separation: 40,
+        alignment: 50,
+        cohesion: 50,
+      });
+    }).catch(console.error);
 
     return () => {
-      vantaEffect.current?.destroy();
-      vantaEffect.current = null;
+      cloudsEffect.current?.destroy();
+      birdsEffect.current?.destroy();
+      cloudsEffect.current = null;
+      birdsEffect.current  = null;
     };
-  }, []);
+  }, [mounted, isDark]);
 
-  // ── All styles now use your globals.css CSS variables ──────────────────
+  // ── Styles ─────────────────────────────────────────────────────────────
 
   const gradientStyle: CSSProperties = {
-    height: '45%',
-    background:
-      'linear-gradient(to top, rgba(15,23,42,0.85) 0%, rgba(15,23,42,0.4) 55%, transparent 100%)',
-    // rgba values match your --background: #0f172a (15,23,42)
-  };
-
-  const buildingWrapStyle: CSSProperties = {
-    height: '100%',
-    width: '100%',
-    maxWidth: '100vw',
-  };
-
-  const buildingImgStyle: CSSProperties = {
-    width: '100%',
-    height: '100%',
-    objectFit: 'fill',
-    objectPosition: 'bottom',
+    height: '50%',
+    background: (!mounted || isDark)
+      ? 'linear-gradient(to top, rgba(15,23,42,0.90) 0%, rgba(15,23,42,0.45) 55%, transparent 100%)'
+      : 'linear-gradient(to top, rgba(232,244,253,0.92) 0%, rgba(232,244,253,0.4) 55%, transparent 100%)',
+    transition: mounted ? 'background 0.5s ease' : 'none',
   };
 
   const eyebrowStyle: CSSProperties = {
-    background: 'rgba(74,144,217,0.2)',   // --primary at 20% opacity
+    background: (!mounted || isDark) ? 'rgba(74,144,217,0.2)' : 'rgba(74,144,217,0.12)',
     backdropFilter: 'blur(8px)',
-    border: '1px solid rgba(74,144,217,0.4)', // --primary at 40% opacity
+    border: (!mounted || isDark)
+      ? '1px solid rgba(74,144,217,0.4)'
+      : '1px solid rgba(74,144,217,0.35)',
     letterSpacing: '0.15em',
-    color: '#ffffff',
+    color: (!mounted || isDark) ? '#ffffff' : '#0f172a',
+    transition: mounted ? 'all 0.4s ease' : 'none',
   };
 
   const headingStyle: CSSProperties = {
-    textShadow: '0 2px 20px rgba(15,23,42,0.6)',
+    color: (!mounted || isDark) ? '#f8fafc' : '#0f172a',
+    textShadow: (!mounted || isDark)
+      ? '0 2px 20px rgba(15,23,42,0.6)'
+      : '0 2px 12px rgba(255,255,255,0.9)',
+    transition: mounted ? 'color 0.4s ease' : 'none',
   };
 
-  const accentStyle: CSSProperties = {
-    color: 'var(--primary)',   // your --primary: #4a90d9
-  };
+  const accentStyle: CSSProperties = { color: 'var(--primary)' };
 
   const subtitleStyle: CSSProperties = {
-    color: 'rgba(248,250,252,0.82)', // --foreground dark at 82% opacity
-    textShadow: '0 1px 8px rgba(15,23,42,0.4)',
+    color: (!mounted || isDark) ? 'rgba(248,250,252,0.82)' : 'rgba(15,23,42,0.72)',
+    textShadow: (!mounted || isDark)
+      ? '0 1px 8px rgba(15,23,42,0.4)'
+      : '0 1px 6px rgba(255,255,255,0.7)',
+    transition: mounted ? 'color 0.4s ease' : 'none',
   };
 
   const primaryBtnStyle: CSSProperties = {
-    background: 'var(--primary)',             // #4a90d9
-    color: 'var(--primary-foreground)',       // #ffffff
-    boxShadow: '0 4px 24px rgba(74,144,217,0.45)',
+    background: 'var(--accent-gold)',
+    color: 'var(--accent-gold-foreground)',
+    boxShadow: '0 4px 24px rgba(255,217,125,0.45)',
   };
 
   const secondaryBtnStyle: CSSProperties = {
-    background: 'rgba(255,255,255,0.12)',
-    color: 'var(--primary-foreground)',       // #ffffff
-    border: '1px solid rgba(255,255,255,0.35)',
+    background: (!mounted || isDark) ? 'rgba(255,255,255,0.12)' : 'rgba(15,23,42,0.08)',
+    color: (!mounted || isDark) ? '#ffffff' : '#0f172a',
+    border: (!mounted || isDark)
+      ? '1px solid rgba(255,255,255,0.35)'
+      : '1px solid rgba(15,23,42,0.2)',
     backdropFilter: 'blur(8px)',
+    transition: mounted ? 'all 0.4s ease' : 'none',
   };
+
+  const scrollColor = (!mounted || isDark) ? 'rgba(255,255,255,0.6)' : 'rgba(15,23,42,0.5)';
 
   const handlePrimaryEnter = (e: MouseEvent<HTMLAnchorElement>) => {
-    e.currentTarget.style.background = 'var(--primary-hover)'; // #357abd
+    e.currentTarget.style.background = 'var(--accent-gold-hover)';
     e.currentTarget.style.transform = 'translateY(-2px)';
-    e.currentTarget.style.boxShadow = '0 8px 32px rgba(74,144,217,0.6)';
+    e.currentTarget.style.boxShadow = '0 8px 32px rgba(255,217,125,0.6)';
   };
-
   const handlePrimaryLeave = (e: MouseEvent<HTMLAnchorElement>) => {
-    e.currentTarget.style.background = 'var(--primary)';
+    e.currentTarget.style.background = 'var(--accent-gold)';
     e.currentTarget.style.transform = 'translateY(0)';
-    e.currentTarget.style.boxShadow = '0 4px 24px rgba(74,144,217,0.45)';
+    e.currentTarget.style.boxShadow = '0 4px 24px rgba(255,217,125,0.45)';
   };
-
   const handleSecondaryEnter = (e: MouseEvent<HTMLAnchorElement>) => {
-    e.currentTarget.style.background = 'rgba(255,255,255,0.2)';
+    e.currentTarget.style.background = isDark ? 'rgba(255,255,255,0.22)' : 'rgba(15,23,42,0.15)';
   };
-
   const handleSecondaryLeave = (e: MouseEvent<HTMLAnchorElement>) => {
-    e.currentTarget.style.background = 'rgba(255,255,255,0.12)';
+    e.currentTarget.style.background = isDark ? 'rgba(255,255,255,0.12)' : 'rgba(15,23,42,0.08)';
   };
 
   return (
     <section className="relative h-screen flex items-end justify-center overflow-hidden">
-      <section ref={vantaRef} className="absolute top-[-200px] inset-0 z-0 h-[100%]" />
 
+      {/* Layer 1 — Clouds (base background) */}
       <div
-        className="absolute inset-x-0 bottom-0 z-10 pointer-events-none"
-        style={gradientStyle}
+        ref={cloudsRef}
+        className="absolute inset-0 z-0"
+        style={{ top: '-200px', height: 'calc(100% + 200px)' }}
       />
+
+      {/* Layer 2 — Birds (on top of clouds, black bg removed via screen blend) */}
+      <div
+        ref={birdsRef}
+        className="absolute inset-0 z-[1] pointer-events-none"
+        style={{
+          top: '-200px',
+          height: 'calc(100% + 200px)',
+          mixBlendMode: 'screen',  // ← black = transparent, colours show through
+        }}
+      />
+
+      <div className="absolute inset-x-0 bottom-0 z-10 pointer-events-none" style={gradientStyle} />
 
       <div
         className="absolute inset-x-0 bottom-0 z-20 flex justify-center items-end pointer-events-none"
-        style={buildingWrapStyle}
+        style={{ height: '100%', width: '100%', maxWidth: '100vw' }}
       >
         <img
           src="/images/home/hero/university1.png"
           alt=""
           aria-hidden="true"
-          style={buildingImgStyle}
+          style={{ width: '100%', height: '100%', objectFit: 'fill', objectPosition: 'bottom' }}
         />
       </div>
 
-      {/* Overlay */}
-      <div className="absolute inset-0 z-20 bg-yellow backdrop-blur-sm bg-opacity-30 pointer-events-none" />
-
-      <div className="relative z-30 text-center text-white px-6 pb-20 max-w-4xl mx-auto">
+      <div className="relative z-30 text-center px-6 pb-20 max-w-4xl mx-auto">
         <span
           className="inline-block mb-4 text-xs font-semibold tracking-widest uppercase px-4 py-1 rounded-full"
           style={eyebrowStyle}
@@ -152,10 +226,7 @@ export default function Hero() {
           India → Germany
         </span>
 
-        <h1
-          className="text-4xl md:text-6xl font-bold mb-6 leading-tight"
-          style={headingStyle}
-        >
+        <h1 className="text-4xl md:text-6xl font-bold mb-6 leading-tight" style={headingStyle}>
           Your bridge from India to Germany,{' '}
           <span style={accentStyle}>built by people already there.</span>
         </h1>
@@ -165,7 +236,6 @@ export default function Hero() {
         </p>
 
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          
           <a
             href="#get-started"
             className="inline-flex items-center justify-center gap-2 font-semibold py-3 px-8 rounded-full transition-all duration-300"
@@ -173,9 +243,8 @@ export default function Hero() {
             onMouseEnter={handlePrimaryEnter}
             onMouseLeave={handlePrimaryLeave}
           >
-            Get Started Now →
+            Book a Free Consultation
           </a>
-
           <a
             href="#how-it-works"
             className="inline-flex items-center justify-center gap-2 font-semibold py-3 px-8 rounded-full transition-all duration-300"
@@ -183,7 +252,7 @@ export default function Hero() {
             onMouseEnter={handleSecondaryEnter}
             onMouseLeave={handleSecondaryLeave}
           >
-            See How It Works
+            Explore Germany
           </a>
         </div>
       </div>
@@ -192,10 +261,10 @@ export default function Hero() {
         className="absolute bottom-6 left-1/2 z-30 -translate-x-1/2 flex flex-col items-center gap-1 opacity-60"
         aria-hidden="true"
       >
-        <span className="text-white uppercase tracking-widest" style={{ fontSize: '10px' }}>
+        <span className="uppercase tracking-widest" style={{ fontSize: '10px', color: scrollColor }}>
           Scroll
         </span>
-        <span className="text-white animate-bounce" style={{ fontSize: '18px' }}>↓</span>
+        <span className="animate-bounce" style={{ fontSize: '18px', color: scrollColor }}>↓</span>
       </div>
     </section>
   );
